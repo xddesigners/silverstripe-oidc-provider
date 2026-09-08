@@ -1,0 +1,33 @@
+---
+Name: oidc-provider
+---
+SilverStripe\Control\Director:
+  rules:
+    'oauth/authorize': 'XD\OIDCProvider\Control\AuthorizeController'
+    'oauth/token': 'XD\OIDCProvider\Control\TokenController'
+    'oauth/userinfo': 'XD\OIDCProvider\Control\UserInfoController'
+    'oauth/jwks': 'XD\OIDCProvider\Control\JwksController'
+    '.well-known/openid-configuration': 'XD\OIDCProvider\Control\DiscoveryController'
+
+# Clients (relying parties) are configured by a developer, not in the CMS.
+# The simple single-client case goes in .env (OIDC_CLIENT_ID / _SECRET / _REDIRECT_URIS).
+# For MULTIPLE OIDC couplings, define them here (secrets stay in .env via secret_env):
+#
+# XD\OIDCProvider\Repository\ClientRepository:
+#   clients:
+#     example_sp:
+#       name: 'Example Service Provider'
+#       secret_env: 'OIDC_CLIENT_EXAMPLE_SECRET'
+#       redirect_uris:
+#         - 'https://sp.example.com/oidc/callback'   # the SP's Reply URL
+#       scopes: [openid, profile, email]
+#       grant_types: [authorization_code, refresh_token]
+#     other_platform:
+#       name: 'Another LMS'
+#       secret_env: 'OIDC_CLIENT_OTHER_SECRET'
+#       redirect_uris: ['https://other.example/callback']
+
+# Adds a read-only "SSO logins" tab to the Member edit form (per-member history).
+SilverStripe\Security\Member:
+  extensions:
+    - XD\OIDCProvider\Extension\MemberOIDCLogExtension

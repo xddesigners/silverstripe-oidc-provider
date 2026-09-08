@@ -1,0 +1,8 @@
+# Never commit signing keys
+keys/
+*.key
+*.pem
+
+# macOS / IDE
+.DS_Store
+.idea/

@@ -1,0 +1,32 @@
+{
+    "name": "xddesigners/silverstripe-oidc-provider",
+    "description": "Turns a Silverstripe site into an OpenID Connect Provider (Identity Provider): the site issues OIDC/OAuth2 tokens for the already-logged-in Member, so external Service Providers can do SP-initiated SSO against it.",
+    "type": "silverstripe-vendormodule",
+    "license": "BSD-3-Clause",
+    "keywords": ["silverstripe", "oidc", "openid-connect", "oauth2", "sso", "identity-provider"],
+    "authors": [
+        {
+            "name": "XD designers",
+            "homepage": "https://www.xd.nl"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "silverstripe/framework": "^6",
+        "league/oauth2-server": "^9.3",
+        "steverhoades/oauth2-openid-connect-server": "^3.0",
+        "guzzlehttp/psr7": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "XD\\OIDCProvider\\": "src/"
+        }
+    },
+    "prefer-stable": true,
+    "minimum-stability": "dev",
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.x-dev"
+        }
+    }
+}
