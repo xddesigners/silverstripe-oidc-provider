@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace XD\OIDCProvider\Control;
 
 use GuzzleHttp\Psr7\Response as Psr7Response;
-use GuzzleHttp\Psr7\ServerRequest;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use OpenIDConnectServer\ClaimExtractor;
 use SilverStripe\Control\Controller;
@@ -30,7 +29,7 @@ class UserInfoController extends Controller
     public function index(HTTPRequest $request): HTTPResponse
     {
         $service = OIDCProviderService::create();
-        $psrRequest = ServerRequest::fromGlobals();
+        $psrRequest = $this->psrServerRequest();
 
         try {
             $validated = $service->resourceServer()->validateAuthenticatedRequest($psrRequest);

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace XD\OIDCProvider\Control;
 
 use GuzzleHttp\Psr7\Response as Psr7Response;
-use GuzzleHttp\Psr7\ServerRequest;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\HTTPRequest;
@@ -28,7 +27,7 @@ class TokenController extends Controller
     public function index(HTTPRequest $request): HTTPResponse
     {
         $server = OIDCProviderService::create()->authorizationServer();
-        $psrRequest = ServerRequest::fromGlobals();
+        $psrRequest = $this->psrServerRequest();
 
         try {
             return $this->toHTTPResponse(
