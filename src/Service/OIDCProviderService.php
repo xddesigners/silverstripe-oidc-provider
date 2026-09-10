@@ -11,7 +11,6 @@ use League\OAuth2\Server\Grant\AuthCodeGrant;
 use League\OAuth2\Server\Grant\RefreshTokenGrant;
 use League\OAuth2\Server\ResourceServer;
 use OpenIDConnectServer\ClaimExtractor;
-use OpenIDConnectServer\IdTokenResponse;
 use RuntimeException;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Configurable;
@@ -96,20 +95,19 @@ class OIDCProviderService
         );
     }
 
-    private function idTokenResponse(): IdTokenResponse
+    private function idTokenResponse(): OIDCIdTokenResponse
     {
-        $identity = Injector::inst()->create(IdentityRepository::class);
-        $extractor = new ClaimExtractor();
-
-        // In production keep the upstream behaviour: the issuer is forced to
-        // https (OIDC requires https issuers) from the request host. Only in dev
-        // — where the site runs on http — override the issuer so the id_token
-        // `iss` matches the discovery document's `issuer` for local testing.
-        if (Director::isDev()) {
-            return new OIDCIdTokenResponse($identity, $extractor, $this->issuer(), $this->keyId());
-        }
-
-        return new IdTokenResponse($identity, $extractor, $this->keyId());
+        // Always our subclass: it sets `iss` to the canonical issuer
+        // (Director::absoluteBaseURL — https on production, matching the discovery
+        // document) AND echoes the request `nonce` into the id_token, which clients
+        // with RequireNonce (e.g. Microsoft.IdentityModel — IDX21320) demand. The
+        // upstream IdTokenResponse omits the nonce, so it must not be used.
+        return new OIDCIdTokenResponse(
+            Injector::inst()->create(IdentityRepository::class),
+            new ClaimExtractor(),
+            $this->issuer(),
+            $this->keyId()
+        );
     }
 
     /** The OIDC issuer identifier (this site's base URL, no trailing slash). */
