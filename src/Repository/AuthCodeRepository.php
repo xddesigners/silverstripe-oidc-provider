@@ -10,6 +10,7 @@ use League\OAuth2\Server\Repositories\AuthCodeRepositoryInterface;
 use SilverStripe\Core\Injector\Injectable;
 use XD\OIDCProvider\Entity\AuthCodeEntity;
 use XD\OIDCProvider\Model\OAuthAuthCode;
+use XD\OIDCProvider\Support\NonceContext;
 
 class AuthCodeRepository implements AuthCodeRepositoryInterface
 {
@@ -31,6 +32,7 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
             $authCodeEntity->getScopes()
         ));
         $record->RedirectUri = (string) $authCodeEntity->getRedirectUri();
+        $record->Nonce = NonceContext::incoming();
         $record->ExpiryUTC = $authCodeEntity->getExpiryDateTime()->format('Y-m-d H:i:s');
         $record->Revoked = false;
         $record->write();

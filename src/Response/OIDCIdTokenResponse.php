@@ -12,6 +12,7 @@ use League\OAuth2\Server\Entities\UserEntityInterface;
 use OpenIDConnectServer\ClaimExtractor;
 use OpenIDConnectServer\IdTokenResponse;
 use OpenIDConnectServer\Repositories\IdentityProviderInterface;
+use XD\OIDCProvider\Support\NonceContext;
 
 /**
  * Drop-in id_token response that sets `iss` to our canonical issuer.
@@ -45,11 +46,19 @@ class OIDCIdTokenResponse extends IdTokenResponse
             $expiresAt = \DateTimeImmutable::createFromMutable($expiresAt);
         }
 
-        return $builder
+        $builder = $builder
             ->permittedFor($accessToken->getClient()->getIdentifier())
             ->issuedBy($this->issuer)
             ->issuedAt(new \DateTimeImmutable())
             ->expiresAt($expiresAt)
             ->relatedTo($userEntity->getIdentifier());
+
+        // Echo the request nonce (OIDC): required by clients with RequireNonce.
+        $nonce = NonceContext::forToken();
+        if ($nonce !== null) {
+            $builder = $builder->withClaim('nonce', $nonce);
+        }
+
+        return $builder;
     }
 }

@@ -13,6 +13,7 @@ use SilverStripe\Security\Security;
 use XD\OIDCProvider\Entity\UserEntity;
 use XD\OIDCProvider\Model\OAuthLoginLog;
 use XD\OIDCProvider\Service\OIDCProviderService;
+use XD\OIDCProvider\Support\NonceContext;
 
 /**
  * OAuth2/OIDC authorization endpoint (/oauth/authorize).
@@ -53,6 +54,9 @@ class AuthorizeController extends Controller
             // Auto-approve: clients here are developer-configured and trusted.
             // An optional consent screen is a later phase.
             $authRequest->setAuthorizationApproved(true);
+
+            // Persist the request nonce with the auth code so the id_token echoes it.
+            NonceContext::setIncoming($psrRequest->getQueryParams()['nonce'] ?? null);
 
             $response = $this->toHTTPResponse(
                 $server->completeAuthorizationRequest($authRequest, new Psr7Response())

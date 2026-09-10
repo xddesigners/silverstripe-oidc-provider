@@ -11,6 +11,8 @@ use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
 use XD\OIDCProvider\Entity\ScopeEntity;
+use XD\OIDCProvider\Model\OAuthAuthCode;
+use XD\OIDCProvider\Support\NonceContext;
 
 class ScopeRepository implements ScopeRepositoryInterface
 {
@@ -45,6 +47,14 @@ class ScopeRepository implements ScopeRepositoryInterface
         string|null $userIdentifier = null,
         ?string $authCodeId = null
     ): array {
+        // Carry the OIDC nonce from this authorization code into the id_token
+        // (echoed as the `nonce` claim by the id_token response). league passes
+        // the auth-code id here at token time.
+        if ($authCodeId !== null) {
+            $authCode = OAuthAuthCode::get()->filter('Code', $authCodeId)->first();
+            NonceContext::setForToken($authCode?->Nonce);
+        }
+
         // Never grant a scope the client is not registered for. Fail CLOSED: an
         // unconfigured allowlist falls back to the base OIDC identity scopes
         // rather than granting whatever the client happened to request.

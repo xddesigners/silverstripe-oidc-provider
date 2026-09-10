@@ -21,6 +21,7 @@ class OAuthAuthCode extends DataObject
         'ClientIdentifier' => 'Varchar(100)',
         'Scopes' => 'Varchar(512)',
         'RedirectUri' => 'Varchar(2048)',
+        'Nonce' => 'Varchar(512)',
         'ExpiryUTC' => 'Datetime',
         'Revoked' => 'Boolean',
     ];
