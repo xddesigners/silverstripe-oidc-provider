@@ -6,7 +6,6 @@ namespace XD\OIDCProvider\Control;
 
 use GuzzleHttp\Psr7\Response as Psr7Response;
 use League\OAuth2\Server\Exception\OAuthServerException;
-use OpenIDConnectServer\ClaimExtractor;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\HTTPResponse;
@@ -41,7 +40,7 @@ class UserInfoController extends Controller
                 throw OAuthServerException::accessDenied('Unknown user');
             }
 
-            $claims = (new ClaimExtractor())->extract($scopeIds, $user->getClaims());
+            $claims = $service->claimExtractor()->extract($scopeIds, $user->getClaims());
             $claims['sub'] = $userId;
 
             return $this->jsonResponse($claims, 200, true);

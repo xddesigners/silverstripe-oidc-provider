@@ -23,7 +23,8 @@ class DiscoveryController extends Controller
 
     public function index(HTTPRequest $request): HTTPResponse
     {
-        $issuer = OIDCProviderService::create()->issuer();
+        $service = OIDCProviderService::create();
+        $issuer = $service->issuer();
 
         return $this->jsonResponse([
             'issuer' => $issuer,
@@ -36,7 +37,10 @@ class DiscoveryController extends Controller
             'subject_types_supported' => ['public'],
             'id_token_signing_alg_values_supported' => ['RS256'],
             'scopes_supported' => ['openid', 'profile', 'email', 'offline_access'],
-            'claims_supported' => ['sub', 'name', 'given_name', 'family_name', 'email', 'email_verified'],
+            'claims_supported' => array_merge(
+                ['sub', 'name', 'given_name', 'family_name', 'email', 'email_verified'],
+                $service->extraProfileClaims()
+            ),
             'token_endpoint_auth_methods_supported' => ['client_secret_basic', 'client_secret_post'],
             'code_challenge_methods_supported' => ['S256'],
         ]);

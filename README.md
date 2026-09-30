@@ -112,8 +112,11 @@ plus the `client_id` + `client_secret`; it can auto-configure the rest.
   (`/.well-known/openid-configuration`).
 - The Service Provider's **Reply URL** → the client's Redirect URI (allowlist).
 - Required claims `email`, `given_name`, `family_name` map from `Member.Email/FirstName/Surname`.
-  Optional `companyname`, `department`, `jobtitle` can be added per project with a Member extension
-  implementing `updateOIDCClaims(array &$claims)`.
+  Optional `companyname`, `department`, `jobtitle`, `additionalinfo` can be added per project with a
+  Member extension implementing `updateOIDCClaims(array &$claims)`. These non-standard names are
+  permitted under the `profile` scope out of the box (see `OIDCProviderService.extra_profile_claims`);
+  the scope-based `ClaimExtractor` would otherwise drop any claim not in a registered set. Adjust or
+  clear that config to permit different extra claims (they also appear in `claims_supported`).
 
 ## Security
 

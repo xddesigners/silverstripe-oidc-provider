@@ -24,6 +24,7 @@ use XD\OIDCProvider\Repository\IdentityRepository;
 use XD\OIDCProvider\Repository\RefreshTokenRepository;
 use XD\OIDCProvider\Repository\ScopeRepository;
 use XD\OIDCProvider\Response\OIDCIdTokenResponse;
+use XD\OIDCProvider\Support\OIDCClaimExtractor;
 
 /**
  * Builds the configured league/oauth2-server servers (authorization + resource)
@@ -48,6 +49,17 @@ class OIDCProviderService
     private static string $auth_code_ttl = 'PT10M';
 
     private static string $refresh_token_ttl = 'P1M';
+
+    /**
+     * Extra, non-standard claims permitted under the OIDC `profile` scope, so a
+     * project's `updateOIDCClaims` hook can surface them in the id_token/userinfo
+     * (the scope-based ClaimExtractor drops any claim not in a registered set).
+     * They only appear when actually set on the user; listing them here merely
+     * lets them through. Set to [] to disable.
+     *
+     * @var string[]
+     */
+    private static array $extra_profile_claims = ['companyname', 'department', 'jobtitle', 'additionalinfo'];
 
     /**
      * Verify the private-key file permissions (recommend 600). Set to false on
@@ -95,6 +107,23 @@ class OIDCProviderService
         );
     }
 
+    /** @return string[] */
+    public function extraProfileClaims(): array
+    {
+        $claims = array_map('strval', (array) $this->config()->get('extra_profile_claims'));
+
+        return array_values(array_filter($claims, static fn (string $claim): bool => $claim !== ''));
+    }
+
+    /**
+     * ClaimExtractor that also permits the configured extra profile claims (e.g.
+     * department) through the scope filter. Shared by the id_token and userinfo.
+     */
+    public function claimExtractor(): ClaimExtractor
+    {
+        return new OIDCClaimExtractor($this->extraProfileClaims());
+    }
+
     private function idTokenResponse(): OIDCIdTokenResponse
     {
         // Always our subclass: it sets `iss` to the canonical issuer
@@ -104,7 +133,7 @@ class OIDCProviderService
         // upstream IdTokenResponse omits the nonce, so it must not be used.
         return new OIDCIdTokenResponse(
             Injector::inst()->create(IdentityRepository::class),
-            new ClaimExtractor(),
+            $this->claimExtractor(),
             $this->issuer(),
             $this->keyId()
         );
