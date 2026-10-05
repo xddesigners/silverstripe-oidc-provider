@@ -17,9 +17,13 @@ use XD\OIDCProvider\Repository\ClientRepository;
  *
  * A relying party redirects the browser here to end the session (e.g. .NET /
  * Duende does this on sign-out; without this endpoint their handler throws
- * "Cannot redirect to the end session endpoint"). We end this IdP's session for
- * the visitor and, when a valid `post_logout_redirect_uri` is supplied
- * (allowlisted for the client), redirect back to it echoing `state`.
+ * "Cannot redirect to the end session endpoint"). When a valid
+ * `post_logout_redirect_uri` is supplied (allowlisted for the client) we redirect
+ * back to it echoing `state`.
+ *
+ * By default this does NOT end this site's own session — logging out of a
+ * downstream relying party should leave the primary-site session intact. Set
+ * `end_session_logs_out` to true for full SSO single-logout.
  *
  * The id_token_hint is used only to identify the client (its `aud`) so we can
  * pick the right allowlist; the security boundary is the allowlist itself — we
@@ -37,14 +41,23 @@ class LogoutController extends Controller
         'index',
     ];
 
+    /**
+     * Whether hitting the end_session_endpoint also ends THIS site's session
+     * (single logout). Default false: logging out of a downstream relying party
+     * (e.g. an LMS) should NOT log the user out of this primary site. Only the
+     * RP's own logout completes. Set true for full SSO single-logout.
+     */
+    private static bool $end_session_logs_out = false;
+
     public function index(HTTPRequest $request): HTTPResponse
     {
         $postLogoutRedirectUri = (string) $request->getVar('post_logout_redirect_uri');
         $state = (string) $request->getVar('state');
         $clientId = $this->resolveClientId($request);
 
-        // End the IdP session for the current visitor.
-        if (Security::getCurrentUser()) {
+        // Optionally end the IdP session too (single logout). Off by default so a
+        // downstream app's logout leaves the primary-site session intact.
+        if ($this->config()->get('end_session_logs_out') && Security::getCurrentUser()) {
             Injector::inst()->get(IdentityStore::class)->logOut($request);
         }
 
