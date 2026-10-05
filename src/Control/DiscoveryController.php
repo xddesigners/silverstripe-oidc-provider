@@ -31,6 +31,7 @@ class DiscoveryController extends Controller
             'authorization_endpoint' => $issuer . '/oauth/authorize',
             'token_endpoint' => $issuer . '/oauth/token',
             'userinfo_endpoint' => $issuer . '/oauth/userinfo',
+            'end_session_endpoint' => $issuer . '/oauth/logout',
             'jwks_uri' => $issuer . '/oauth/jwks',
             'response_types_supported' => ['code'],
             'grant_types_supported' => ['authorization_code', 'refresh_token'],

@@ -100,8 +100,12 @@ The `.env` single client and the YAML clients are merged, so you can use either 
 | `GET /oauth/authorize` | ✅ |
 | `POST /oauth/token` | ✅ (returns `id_token`) |
 | `GET /oauth/userinfo` | ✅ (Bearer) |
+| `GET /oauth/logout` | ✅ (RP-initiated logout / `end_session_endpoint`) |
 | `GET /oauth/jwks` | ✅ |
 | `GET /.well-known/openid-configuration` | ✅ |
+
+RP-initiated logout ends the IdP session and, if a `post_logout_redirect_uri` is supplied that is
+allowlisted for the client (`post_logout_redirect_uris`), redirects back to it echoing `state`.
 
 Give the Service Provider the **Discovery URL** `https://<site>/.well-known/openid-configuration`
 plus the `client_id` + `client_secret`; it can auto-configure the rest.

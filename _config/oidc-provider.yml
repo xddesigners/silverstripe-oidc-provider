@@ -6,6 +6,7 @@ SilverStripe\Control\Director:
     'oauth/authorize': 'XD\OIDCProvider\Control\AuthorizeController'
     'oauth/token': 'XD\OIDCProvider\Control\TokenController'
     'oauth/userinfo': 'XD\OIDCProvider\Control\UserInfoController'
+    'oauth/logout': 'XD\OIDCProvider\Control\LogoutController'
     'oauth/jwks': 'XD\OIDCProvider\Control\JwksController'
     '.well-known/openid-configuration': 'XD\OIDCProvider\Control\DiscoveryController'
 
@@ -20,6 +21,8 @@ SilverStripe\Control\Director:
 #       secret_env: 'OIDC_CLIENT_EXAMPLE_SECRET'
 #       redirect_uris:
 #         - 'https://sp.example.com/oidc/callback'   # the SP's Reply URL
+#       post_logout_redirect_uris:                   # RP-initiated logout targets
+#         - 'https://sp.example.com/signout-callback'
 #       scopes: [openid, profile, email]
 #       grant_types: [authorization_code, refresh_token]
 #     other_platform:

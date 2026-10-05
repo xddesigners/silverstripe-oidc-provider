@@ -19,7 +19,8 @@ use XD\OIDCProvider\Entity\ClientEntity;
  *
  *  1. A single client straight from .env (the common case):
  *       OIDC_CLIENT_ID, OIDC_CLIENT_SECRET, OIDC_CLIENT_REDIRECT_URIS (comma-sep),
- *       OIDC_CLIENT_NAME, OIDC_CLIENT_SCOPES, OIDC_CLIENT_GRANT_TYPES (space-sep).
+ *       OIDC_CLIENT_NAME, OIDC_CLIENT_SCOPES, OIDC_CLIENT_GRANT_TYPES (space-sep),
+ *       OIDC_CLIENT_POST_LOGOUT_REDIRECT_URIS (comma-sep, for RP-initiated logout).
  *
  *  2. Any number of clients from YAML config (secret inline or via `secret_env`):
  *       XD\OIDCProvider\Repository\ClientRepository:
@@ -82,6 +83,38 @@ class ClientRepository implements ClientRepositoryInterface
         return $this->clients()[$clientIdentifier]['scopes'] ?? [];
     }
 
+    /** @return string[] */
+    public function postLogoutRedirectUrisFor(string $clientIdentifier): array
+    {
+        return $this->clients()[$clientIdentifier]['post_logout_redirect_uris'] ?? [];
+    }
+
+    /**
+     * Whether a post-logout redirect to $uri is allowed. Checks the named client's
+     * allowlist when identifiable, otherwise any configured client's — so we only
+     * ever redirect to a URI a trusted client registered (no open redirect).
+     */
+    public function isPostLogoutRedirectAllowed(?string $clientIdentifier, string $uri): bool
+    {
+        if ($uri === '') {
+            return false;
+        }
+
+        $clients = $this->clients();
+
+        if ($clientIdentifier !== null && isset($clients[$clientIdentifier])) {
+            return in_array($uri, $clients[$clientIdentifier]['post_logout_redirect_uris'], true);
+        }
+
+        foreach ($clients as $client) {
+            if (in_array($uri, $client['post_logout_redirect_uris'], true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Resolve the merged client list, normalised to:
      *   [ id => ['name','secret','redirect_uris'[],'scopes'[],'grant_types'[]] ].
@@ -102,6 +135,7 @@ class ClientRepository implements ClientRepositoryInterface
                 'name' => (string) ($def['name'] ?? $id),
                 'secret' => (string) ($secret ?: ''),
                 'redirect_uris' => array_values((array) ($def['redirect_uris'] ?? [])),
+                'post_logout_redirect_uris' => array_values((array) ($def['post_logout_redirect_uris'] ?? [])),
                 'scopes' => array_values((array) ($def['scopes'] ?? ['openid', 'profile', 'email'])),
                 'grant_types' => array_values((array) ($def['grant_types'] ?? ['authorization_code', 'refresh_token'])),
             ];
@@ -113,6 +147,7 @@ class ClientRepository implements ClientRepositoryInterface
                 'name' => (string) (Environment::getEnv('OIDC_CLIENT_NAME') ?: 'OIDC client'),
                 'secret' => (string) (Environment::getEnv('OIDC_CLIENT_SECRET') ?: ''),
                 'redirect_uris' => $this->splitList((string) Environment::getEnv('OIDC_CLIENT_REDIRECT_URIS'), ','),
+                'post_logout_redirect_uris' => $this->splitList((string) Environment::getEnv('OIDC_CLIENT_POST_LOGOUT_REDIRECT_URIS'), ','),
                 'scopes' => $this->splitList((string) (Environment::getEnv('OIDC_CLIENT_SCOPES') ?: 'openid profile email'), ' '),
                 'grant_types' => $this->splitList((string) (Environment::getEnv('OIDC_CLIENT_GRANT_TYPES') ?: 'authorization_code refresh_token'), ' '),
             ];
