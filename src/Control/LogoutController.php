@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace XD\OIDCProvider\Control;
 
 use SilverStripe\Control\Controller;
+use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Injector\Injector;
@@ -49,6 +50,14 @@ class LogoutController extends Controller
      */
     private static bool $end_session_logs_out = false;
 
+    /**
+     * Where to send the user when the relying party supplied no valid
+     * post_logout_redirect_uri. Empty = this site's home — so logging out of a
+     * downstream app returns the user to the portal (where they stay logged in)
+     * instead of a blank page.
+     */
+    private static string $post_logout_landing_url = '';
+
     public function index(HTTPRequest $request): HTTPResponse
     {
         $postLogoutRedirectUri = (string) $request->getVar('post_logout_redirect_uri');
@@ -73,10 +82,11 @@ class LogoutController extends Controller
             return $this->redirect($target);
         }
 
-        $response = HTTPResponse::create('Logged out.', 200);
-        $response->addHeader('Content-Type', 'text/plain; charset=utf-8');
+        // No (valid) RP redirect target: send the user to the site landing page
+        // (configurable, defaults to home) so they return to the portal.
+        $landing = (string) $this->config()->get('post_logout_landing_url');
 
-        return $response;
+        return $this->redirect($landing !== '' ? $landing : (string) Director::absoluteBaseURL());
     }
 
     /** Client id from the explicit `client_id` param, else the id_token_hint `aud`. */
